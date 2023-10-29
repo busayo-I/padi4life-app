@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Users
-from .Serializers import UserSerializer, UserLoginSerializer
+from .Serializers import UserSerializer, UserLoginSerializer, UserUpdateSerializer, UserDetailSerializer
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils.text import slugify
 import logging
@@ -16,9 +16,12 @@ import logging
 def user_sign_up(request):
     try:
         if request.method == 'POST':
+            first_name = request.data.get('first_name')
+            last_name = request.data.get('last_name')
             email = request.data.get('email')
-            password = request.data.get('password')
             username = request.data.get('username')
+            password = request.data.get('password')
+            address = request.data.get('address')
 
             if not email or not password or not username:
                 error = {'error': 'Email, password, and username are required.'}
@@ -44,7 +47,7 @@ def user_sign_up(request):
             hashed_password = make_password(password)
 
             # Create the user with a unique slug
-            new_user = Users(email=email, password=hashed_password, username=username, slug=slug)
+            new_user = Users(first_name=first_name, last_name=last_name, email=email, username=username, password=hashed_password, address=address, slug=slug)
             new_user.save()
 
             data = {
@@ -98,6 +101,64 @@ def user_login(request):
                 error = {'error': 'Invalid login credentials.'}
                 return Response(error, status=status.HTTP_401_UNAUTHORIZED)
 
+    except Exception as e:
+        error_message = str(e)
+        response = {
+            'status_message': 'error',
+            'message': 'An error occurred: ' + error_message,
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['PUT'])
+def update_user_details(request, slug):
+    try:
+        user = Users.objects.get(slug=slug)
+
+        # Check if the user exists
+        if user is None:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'PUT':
+            serializer = UserUpdateSerializer(user, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                
+                updated_user = Users.objects.get(slug=slug)
+                serializer_user = UserUpdateSerializer(updated_user)
+                massage = {
+                    'message': 'User details updated successfully',
+                    'details': serializer_user.data
+                }    
+                return Response(massage, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    except Users.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        error_message = str(e)
+        response = {
+            'status_message': 'error',
+            'message': 'An error occurred: ' + error_message,
+        }
+        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['GET'])
+def get_user_details(request, slug):
+    try:
+        user = Users.objects.get(slug=slug)
+
+        if user is not None:
+            serializer = UserDetailSerializer(user)  # Create a serializer for user details
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Users.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         error_message = str(e)
         response = {

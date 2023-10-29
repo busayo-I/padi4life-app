@@ -11,7 +11,7 @@ class Users(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     username = models.CharField(max_length=30, unique=True)
-    phone_number = models.IntegerField(unique=True, null=True)
+    phone_number = models.BigIntegerField(unique=True, null=True)
     country = models.CharField(max_length=50)
     address = models.CharField(max_length=225)
     date_of_birth = models.DateField(null=True)
