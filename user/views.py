@@ -93,7 +93,10 @@ def user_login(request):
                     'message': 'Login successful',
                     'user_id': user.id,
                     'username': user.username,
-                    'slug': user.slug
+                    'email': user.email,
+                    'address' : user.address,
+                    'date_of_birth': user.date_of_birth,
+                    'phone_number': user.phone_number
                 }
                 return Response(data, status=status.HTTP_200_OK)
             else:
