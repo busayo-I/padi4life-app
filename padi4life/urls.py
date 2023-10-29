@@ -20,5 +20,6 @@ api_version = 'v1'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/padi4life/user/', include('user.urls')),
-    path('api/v1/padi4life/user/', include('wallect.urls'))
+    path('api/v1/padi4life/user/', include('wallect.urls')),
+    path('api/v1/padi4life/user/', include('padicoin.urls'))
 ]
